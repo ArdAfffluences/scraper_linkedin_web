@@ -35,7 +35,10 @@ def scrape_linkedin(url, cookie):
 def scrape_public_web(url, nom_selector, email_selector):
     res = []
     try:
-        response = requests.get(url)
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+        }
+        response = requests.get(url, headers=headers)
         soup = BeautifulSoup(response.text, 'html.parser')
 
         noms = soup.select(nom_selector)
@@ -48,6 +51,7 @@ def scrape_public_web(url, nom_selector, email_selector):
     return res
 
 # --- INTERFACE STREAMLIT ---
+st.set_page_config(page_title="Scraper Leads", layout="centered")
 st.title("🕵️ Scraper LinkedIn & Web Public")
 st.markdown("Scraper simple pour extraire des leads depuis LinkedIn et n'importe quel site web.")
 
@@ -58,11 +62,14 @@ if option == "LinkedIn":
     cookie = st.text_input("🔐 Cookie li_at (confidentiel)", type="password")
 
     if st.button("Lancer le scraping LinkedIn"):
-        data = scrape_linkedin(linkedin_url, cookie)
-        df = pd.DataFrame(data)
-        st.dataframe(df)
-        df.to_csv("linkedin_resultats.csv", index=False)
-        st.success("Scraping terminé. Fichier enregistré sous linkedin_resultats.csv")
+        try:
+            data = scrape_linkedin(linkedin_url, cookie)
+            df = pd.DataFrame(data)
+            st.dataframe(df)
+            df.to_csv("linkedin_resultats.csv", index=False)
+            st.success("Scraping terminé. Fichier enregistré sous linkedin_resultats.csv")
+        except Exception as e:
+            st.error(f"Erreur lors du scraping LinkedIn : {str(e)}")
 
 elif option == "Web Public":
     public_url = st.text_input("🔗 URL du site ", "https://exemple.com/annuaire")
@@ -70,8 +77,11 @@ elif option == "Web Public":
     email_css = st.text_input("📧 Sélecteur CSS de l'email", ".email")
 
     if st.button("Lancer le scraping Web"):
-        data = scrape_public_web(public_url, nom_css, email_css)
-        df = pd.DataFrame(data)
-        st.dataframe(df)
-        df.to_csv("web_resultats.csv", index=False)
-        st.success("Scraping terminé. Fichier enregistré sous web_resultats.csv")
+        try:
+            data = scrape_public_web(public_url, nom_css, email_css)
+            df = pd.DataFrame(data)
+            st.dataframe(df)
+            df.to_csv("web_resultats.csv", index=False)
+            st.success("Scraping terminé. Fichier enregistré sous web_resultats.csv")
+        except Exception as e:
+            st.error(f"Erreur lors du scraping Web : {str(e)}")
